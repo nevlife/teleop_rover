@@ -1,0 +1,19 @@
+# -----------------------------------------------------------------------------
+# teleop_rover — telemetry/control plane network config
+# -----------------------------------------------------------------------------
+# Telemetry-side Zenoh router endpoint:
+#   TCP : 7447  (RELIABLE; the only listener — UDP was removed)
+# stream_rover connects to the same router on 7447 (control + video share
+# one router now).
+#
+# vehicle_id is shared with stream_rover purely as an identifier — there is
+# NO runtime coupling between the two packages.
+# -----------------------------------------------------------------------------
+
+/**:
+  ros__parameters:
+    vehicle_id: "0"
+
+net_bridge:
+  ros__parameters:
+    telemetry_locator: "tcp/127.0.0.1:7447"
