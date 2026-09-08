@@ -9,8 +9,37 @@ find_package(ament_cmake REQUIRED)
 find_package(PkgConfig QUIET)
 
 find_package(yaml-cpp REQUIRED)
+find_package(Protobuf QUIET)
 
-add_library(teleop_control_guard src/control_guard.cpp)
+# The v2 wire contract lives in the teleop_contracts submodule; the C++
+# classes are generated at build time rather than checked in, so the schema
+# has exactly one source of truth.
+set(TELEOP_PROTO_ROOT
+  ${CMAKE_CURRENT_SOURCE_DIR}/../teleop_contracts/teleop_contracts/schema)
+if(Protobuf_FOUND AND EXISTS ${TELEOP_PROTO_ROOT}/teleop/v2/control.proto)
+  set(TELEOP_PROTO_DIR ${CMAKE_CURRENT_BINARY_DIR}/proto)
+  file(MAKE_DIRECTORY ${TELEOP_PROTO_DIR})
+  add_custom_command(
+    OUTPUT ${TELEOP_PROTO_DIR}/teleop/v2/control.pb.cc
+           ${TELEOP_PROTO_DIR}/teleop/v2/control.pb.h
+    COMMAND protobuf::protoc
+    ARGS --cpp_out=${TELEOP_PROTO_DIR} -I${TELEOP_PROTO_ROOT}
+         ${TELEOP_PROTO_ROOT}/teleop/v2/control.proto
+    DEPENDS ${TELEOP_PROTO_ROOT}/teleop/v2/control.proto protobuf::protoc
+    COMMENT "Generating C++ for teleop/v2/control.proto"
+    VERBATIM)
+  add_library(teleop_control_proto ${TELEOP_PROTO_DIR}/teleop/v2/control.pb.cc)
+  target_include_directories(teleop_control_proto PUBLIC ${TELEOP_PROTO_DIR})
+  target_link_libraries(teleop_control_proto PUBLIC protobuf::libprotobuf)
+  # Generated code is not ours to lint.
+  target_compile_options(teleop_control_proto PRIVATE -w)
+else()
+  message(STATUS
+    "protobuf or the teleop_contracts submodule is missing - "
+    "the control channel will not be built")
+endif()
+
+add_library(teleop_control_guard src/control_guard.cpp src/fake_vehicle.cpp)
 target_include_directories(teleop_control_guard PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
@@ -67,12 +96,17 @@ if(PkgConfig_FOUND)
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib)
 
-      add_executable(teleop-rover-node src/rover_node.cpp)
-      target_link_libraries(teleop-rover-node PRIVATE
-        teleop_signaling_protocol teleop_video_pipeline teleop_media_config
-        PkgConfig::GSTREAMER PkgConfig::SIGNALING)
-      target_compile_options(teleop-rover-node PRIVATE -Wall -Wextra -Wpedantic)
-      install(TARGETS teleop-rover-node RUNTIME DESTINATION lib/${PROJECT_NAME})
+      if(TARGET teleop_control_proto)
+        add_executable(teleop-rover-node src/rover_node.cpp)
+        target_link_libraries(teleop-rover-node PRIVATE
+          teleop_signaling_protocol teleop_video_pipeline teleop_media_config
+          teleop_control_guard teleop_control_proto
+          PkgConfig::GSTREAMER PkgConfig::SIGNALING)
+        target_compile_options(teleop-rover-node PRIVATE -Wall -Wextra -Wpedantic)
+        install(TARGETS teleop-rover-node RUNTIME DESTINATION lib/${PROJECT_NAME})
+      else()
+        message(STATUS "no generated control contract - teleop-rover-node skipped")
+      endif()
     else()
       message(STATUS
         "gstreamer-webrtc/sdp, libsoup-3.0 or json-glib not found - "
@@ -95,6 +129,9 @@ if(BUILD_TESTING)
 
   ament_add_gtest(media_config_test test/media_config_test.cpp)
   target_link_libraries(media_config_test teleop_media_config)
+
+  ament_add_gtest(fake_vehicle_test test/fake_vehicle_test.cpp)
+  target_link_libraries(fake_vehicle_test teleop_control_guard)
 
   if(TARGET teleop_video_pipeline)
     # The pipeline test defines its own main so it can gst_init before the
