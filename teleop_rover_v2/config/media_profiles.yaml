@@ -14,9 +14,16 @@ control:
   watchdog_ms: 250
   max_future_clock_skew_ms: 50
 
-# Ordered preference. Runtime probing removes codecs without a usable encoder.
+# Ordered preference. Runtime probing drops any codec without a complete
+# encoder/parser/payloader chain, so this is a wish list. AV1 leads for its
+# bandwidth, but GStreamer 1.24 ships no rtpav1pay and it is skipped there.
+#
+# H264 is ahead of VP9 deliberately. Measured on the operator box at
+# 1280x720@30 against this 2000 kbit/s target: nvh264enc reached 1904 kbit/s
+# while software vp9enc managed 508. Preferring VP9 left the hardware encoder
+# idle and delivered a quarter of the requested rate.
 video:
-  codec_preference: [AV1, VP9, H264]
+  codec_preference: [AV1, H264, VP9]
   target_bitrate_bps: 2000000
   keyframe_interval_frames: 30
   b_frames: 0

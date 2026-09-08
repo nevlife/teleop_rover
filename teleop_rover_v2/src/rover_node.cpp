@@ -12,6 +12,7 @@
 #define GST_USE_UNSTABLE_API
 #include <gst/webrtc/webrtc.h>
 
+#include <ament_index_cpp/get_package_share_directory.hpp>
 #include <libsoup/soup.h>
 
 #include "teleop/v2/control.pb.h"
@@ -545,7 +546,18 @@ int main(int argc, char ** argv)
 {
   gst_init(&argc, &argv);
 
-  std::string config_path = "config/media_profiles.yaml";
+  // Default to the installed profile. A path relative to the working
+  // directory is wrong under `ros2 run`, which leaves the caller's cwd in
+  // place: the node exited immediately and the operator's window went on
+  // showing locally computed speeds with nothing behind them.
+  std::string config_path;
+  try {
+    config_path =
+      ament_index_cpp::get_package_share_directory("teleop_rover_v2") +
+      "/config/media_profiles.yaml";
+  } catch (const std::exception &) {
+    config_path = "config/media_profiles.yaml";
+  }
   std::string robot_id = "rover-01";
   std::string server_override;
   for (int i = 1; i + 1 < argc; i += 2) {

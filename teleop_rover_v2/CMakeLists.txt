@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(ament_cmake REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 find_package(PkgConfig QUIET)
 
 find_package(yaml-cpp REQUIRED)
@@ -101,6 +102,7 @@ if(PkgConfig_FOUND)
         target_link_libraries(teleop-rover-node PRIVATE
           teleop_signaling_protocol teleop_video_pipeline teleop_media_config
           teleop_control_guard teleop_control_proto
+          ament_index_cpp::ament_index_cpp
           PkgConfig::GSTREAMER PkgConfig::SIGNALING)
         target_compile_options(teleop-rover-node PRIVATE -Wall -Wextra -Wpedantic)
         install(TARGETS teleop-rover-node RUNTIME DESTINATION lib/${PROJECT_NAME})

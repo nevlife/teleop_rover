@@ -7,6 +7,7 @@
   <maintainer email="pcdpcd100@gmail.com">nev</maintainer>
   <license>MIT</license>
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>ament_index_cpp</depend>
   <depend>yaml-cpp</depend>
   <depend>libsoup-3.0-dev</depend>
   <depend>libjson-glib-dev</depend>
