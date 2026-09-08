@@ -1,5 +1,8 @@
 # teleop_rover
 
+> New development lives in `teleop_rover_v2/`. The existing Zenoh package is
+> retained as a legacy reference until the native WebRTC path is complete.
+
 NEV 차량(Bot) 측 텔레메트리·제어 ROS 2 모듈.
 
 | 패키지 | 역할 | 라우터 |
