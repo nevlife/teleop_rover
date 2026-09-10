@@ -1,0 +1,58 @@
+# =============================================================================
+# teleop_rover (vehicle-side): teleop_rover + teleop_rover_msgs
+# ROS 2 (C++) packages — built with colcon.
+# =============================================================================
+
+# --- Python ------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+.eggs/
+.pytest_cache/
+
+# --- ROS 2 / colcon workspace artifacts --------------------------------------
+build/
+install/
+log/
+.colcon/
+
+# --- C/C++ build artifacts ---------------------------------------------------
+*.o
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# --- Virtual environments ----------------------------------------------------
+.venv/
+venv/
+env/
+
+# --- IDE / editor ------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cache/
+
+# --- OS ----------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+
+# --- Logs / local config -----------------------------------------------------
+*.log
+logs/
+.env
+*.secret
