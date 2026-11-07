@@ -16,15 +16,15 @@ namespace teleop_rover
 /// 1.24 ships `av1enc` but no `rtpav1pay`.
 struct EncoderChoice
 {
-  std::string codec;      ///< "H264", "VP9" or "AV1"
-  std::string encoder;    ///< selected encoder factory
-  std::string parser;     ///< parser factory, empty when none is needed
-  std::string payloader;  ///< RTP payloader factory
+  std::string codec;              ///< "H264", "VP9" or "AV1"
+  std::string encoder;            ///< selected encoder factory
+  std::string parser;             ///< parser factory, empty when none is needed
+  std::string payloader;          ///< RTP payloader factory
   std::string rtp_encoding_name;  ///< SDP encoding-name for the RTP caps
 };
 
 /// True when a GStreamer element factory of this name is registered.
-using FactoryPredicate = std::function<bool (const std::string &)>;
+using FactoryPredicate = std::function<bool(const std::string &)>;
 
 /// The default predicate, backed by the GStreamer registry. `gst_init` must
 /// have run first.

@@ -23,7 +23,7 @@ void print_codec(const char * codec, std::initializer_list<const char *> candida
   const auto factory = first_factory(candidates);
   std::cout << codec << "=" << (factory.empty() ? "unavailable" : factory) << '\n';
 }
-}
+}  // namespace
 
 int main(int argc, char ** argv)
 {

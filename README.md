@@ -7,10 +7,10 @@ Video, telemetry, and control travel end-to-end over WebRTC to
 [`teleop_server`](https://github.com/nevlife/teleop_server). Zenoh is not a
 dependency and is not part of the rover runtime.
 
-| Package | Role |
-|---|---|
-| [`teleop_rover/`](teleop_rover/) | Safety boundary (`ControlGuard`) and the native WebRTC media endpoint |
-| [`teleop_rover_msgs/`](teleop_rover_msgs/) | `EStopStatus` / `CmdMode` / `MuxStatus` / `NetworkStatus` messages |
+| Package                                    | Role                                                                  |
+| ------------------------------------------ | --------------------------------------------------------------------- |
+| [`teleop_rover/`](teleop_rover/)           | Safety boundary (`ControlGuard`) and the native WebRTC media endpoint |
+| [`teleop_rover_msgs/`](teleop_rover_msgs/) | `EStopStatus` / `CmdMode` / `MuxStatus` / `NetworkStatus` messages    |
 
 The wire contract (v2 protobuf schemas, signaling JSON schema) is pinned as a
 git submodule from

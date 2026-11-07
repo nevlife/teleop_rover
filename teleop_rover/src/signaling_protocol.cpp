@@ -5,6 +5,7 @@
 #include <cerrno>
 #include <cstdlib>
 #include <memory>
+#include <string>
 
 namespace teleop_rover
 {
@@ -33,9 +34,7 @@ const gchar * optional_string(JsonObject * object, const char * key)
     return nullptr;
   }
   JsonNode * node = json_object_get_member(object, key);
-  if (JSON_NODE_TYPE(node) != JSON_NODE_VALUE ||
-    json_node_get_value_type(node) != G_TYPE_STRING)
-  {
+  if (JSON_NODE_TYPE(node) != JSON_NODE_VALUE || json_node_get_value_type(node) != G_TYPE_STRING) {
     return nullptr;
   }
   return json_node_get_string(node);
@@ -142,8 +141,14 @@ std::string build_description(const char * type, const std::string & sdp)
 }
 }  // namespace
 
-std::string build_offer(const std::string & sdp) {return build_description("offer", sdp);}
-std::string build_answer(const std::string & sdp) {return build_description("answer", sdp);}
+std::string build_offer(const std::string & sdp)
+{
+  return build_description("offer", sdp);
+}
+std::string build_answer(const std::string & sdp)
+{
+  return build_description("answer", sdp);
+}
 
 std::string build_ice(const IceCandidate & candidate)
 {
@@ -170,8 +175,7 @@ IncomingMessage parse_message(const std::string & json)
   ParserPtr parser(json_parser_new(), g_object_unref);
   GError * error = nullptr;
   if (!json_parser_load_from_data(
-      parser.get(), json.c_str(), static_cast<gssize>(json.size()), &error))
-  {
+        parser.get(), json.c_str(), static_cast<gssize>(json.size()), &error)) {
     const std::string message = error != nullptr ? error->message : "unknown";
     if (error != nullptr) {
       g_error_free(error);
@@ -215,8 +219,8 @@ IncomingMessage parse_message(const std::string & json)
   } else if (message.type == "peer_left") {
     message.kind = IncomingMessage::Kind::kPeerLeft;
   } else if (message.type == "offer" || message.type == "answer") {
-    message.kind = message.type == "offer" ?
-      IncomingMessage::Kind::kOffer : IncomingMessage::Kind::kAnswer;
+    message.kind =
+      message.type == "offer" ? IncomingMessage::Kind::kOffer : IncomingMessage::Kind::kAnswer;
     message.description.sdp = required_string(object, "sdp", message.type.c_str());
   } else if (message.type == "ice") {
     message.kind = IncomingMessage::Kind::kIce;

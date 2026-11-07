@@ -10,16 +10,17 @@
 #include <gst/sdp/sdp.h>
 
 #define GST_USE_UNSTABLE_API
-#include <gst/webrtc/webrtc.h>
-
-#include <ament_index_cpp/get_package_share_directory.hpp>
-#include <libsoup/soup.h>
-
 #include "teleop/v2/control.pb.h"
 
+#include <ament_index_cpp/get_package_share_directory.hpp>
+
+#include <gst/webrtc/webrtc.h>
+#include <libsoup/soup.h>
+
+#include <chrono>
+#include <cinttypes>
 #include <cstdio>
 #include <cstring>
-#include <chrono>
 #include <memory>
 #include <optional>
 #include <string>
@@ -40,24 +41,32 @@ using teleop_rover::TurnCredentials;
 std::int64_t steady_ns()
 {
   return std::chrono::duration_cast<std::chrono::nanoseconds>(
-    std::chrono::steady_clock::now().time_since_epoch()).count();
+           std::chrono::steady_clock::now().time_since_epoch())
+    .count();
 }
 
 std::int64_t unix_ns()
 {
   return std::chrono::duration_cast<std::chrono::nanoseconds>(
-    std::chrono::system_clock::now().time_since_epoch()).count();
+           std::chrono::system_clock::now().time_since_epoch())
+    .count();
 }
 
 const char * reason_text(RejectReason reason)
 {
   switch (reason) {
-    case RejectReason::kNotArmed: return "not_armed";
-    case RejectReason::kWrongSession: return "wrong_session";
-    case RejectReason::kOldSequence: return "old_sequence";
-    case RejectReason::kExpired: return "expired";
-    case RejectReason::kFutureTimestamp: return "future_timestamp";
-    case RejectReason::kInvalidValue: return "invalid_value";
+    case RejectReason::kNotArmed:
+      return "not_armed";
+    case RejectReason::kWrongSession:
+      return "wrong_session";
+    case RejectReason::kOldSequence:
+      return "old_sequence";
+    case RejectReason::kExpired:
+      return "expired";
+    case RejectReason::kFutureTimestamp:
+      return "future_timestamp";
+    case RejectReason::kInvalidValue:
+      return "invalid_value";
   }
   return "unknown";
 }
@@ -130,8 +139,8 @@ std::optional<std::string> turn_server_uri(const TurnCredentials & turn)
     // the URI.
     gchar * user = g_uri_escape_string(turn.username.c_str(), nullptr, FALSE);
     gchar * pass = g_uri_escape_string(turn.credential.c_str(), nullptr, FALSE);
-    std::string uri = std::string(secure ? "turns://" : "turn://") +
-      user + ":" + pass + "@" + host_port;
+    std::string uri =
+      std::string(secure ? "turns://" : "turn://") + user + ":" + pass + "@" + host_port;
     g_free(user);
     g_free(pass);
     return uri;
@@ -144,8 +153,8 @@ void report_vehicle(Rover * rover)
   const auto & pose = rover->vehicle.pose();
   std::printf(
     "teleop-rover: drive %+.2f m/s %+.2f rad/s  pose (%+.2f, %+.2f) heading %+.2f\n",
-    rover->vehicle.linear_mps(), rover->vehicle.angular_rps(),
-    pose.x_m, pose.y_m, pose.heading_rad);
+    rover->vehicle.linear_mps(), rover->vehicle.angular_rps(), pose.x_m, pose.y_m,
+    pose.heading_rad);
   std::fflush(stdout);
 }
 
@@ -196,13 +205,11 @@ void on_control_open(GstWebRTCDataChannel *, gpointer user_data)
     const guint period = static_cast<guint>(rover->config.control.watchdog_ms) / 4 + 1;
     rover->watchdog_source = g_timeout_add(period, on_watchdog_tick, rover);
   }
-  std::printf(
-    "teleop-rover: armed for session %s\n", rover->pending_session_id.c_str());
+  std::printf("teleop-rover: armed for session %s\n", rover->pending_session_id.c_str());
   std::fflush(stdout);
 }
 
-void on_control_message(
-  GstWebRTCDataChannel *, GBytes * payload, gpointer user_data)
+void on_control_message(GstWebRTCDataChannel *, GBytes * payload, gpointer user_data)
 {
   auto * rover = static_cast<Rover *>(user_data);
   gsize size = 0;
@@ -238,8 +245,9 @@ void on_control_message(
   }
   rover->last_reject_reason.clear();
 
-  const double dt_s = rover->last_motion_steady_ns == 0 ?
-    0.0 : static_cast<double>(now_steady - rover->last_motion_steady_ns) / 1e9;
+  const double dt_s = rover->last_motion_steady_ns == 0
+                        ? 0.0
+                        : static_cast<double>(now_steady - rover->last_motion_steady_ns) / 1e9;
   rover->last_motion_steady_ns = now_steady;
   rover->vehicle.apply(*result.motion, dt_s);
 
@@ -257,9 +265,7 @@ void open_control_channel(Rover * rover)
     "options",
     // control.proto: the motion channel is unordered and partially reliable.
     // A late command is worse than a lost one, so nothing is retransmitted.
-    "ordered", G_TYPE_BOOLEAN, FALSE,
-    "max-retransmits", G_TYPE_INT, 0,
-    nullptr);
+    "ordered", G_TYPE_BOOLEAN, FALSE, "max-retransmits", G_TYPE_INT, 0, nullptr);
   g_signal_emit_by_name(
     rover->webrtc, "create-data-channel", "control", options, &rover->control_channel);
   gst_structure_free(options);
@@ -324,7 +330,7 @@ void on_bus_message(GstBus *, GstMessage * message, gpointer user_data)
   gchar * debug = nullptr;
   gst_message_parse_error(message, &error, &debug);
   const std::string reason = std::string("pipeline error: ") + error->message +
-    (debug != nullptr ? std::string("\n") + debug : std::string());
+                             (debug != nullptr ? std::string("\n") + debug : std::string());
   g_error_free(error);
   g_free(debug);
   fail(rover, reason);
@@ -347,8 +353,8 @@ bool start_pipeline(Rover * rover)
 {
   stop_pipeline(rover);
 
-  std::string description = teleop_rover::build_send_pipeline(
-    rover->config, rover->choice, "video-src");
+  std::string description =
+    teleop_rover::build_send_pipeline(rover->config, rover->choice, "video-src");
   description += " ! webrtcbin name=webrtc bundle-policy=max-bundle latency=0";
 
   GError * error = nullptr;
@@ -406,8 +412,8 @@ bool start_pipeline(Rover * rover)
     return false;
   }
   std::printf(
-    "teleop-rover: streaming %s via %s\n",
-    rover->choice.codec.c_str(), rover->choice.encoder.c_str());
+    "teleop-rover: streaming %s via %s\n", rover->choice.codec.c_str(),
+    rover->choice.encoder.c_str());
   return true;
 }
 
@@ -448,9 +454,8 @@ void handle_message(Rover * rover, const std::string & text)
 
     case IncomingMessage::Kind::kPeerReady:
       std::printf(
-        "teleop-rover: paired (session %s, epoch %lu)\n",
-        message.peer_ready.session_id.c_str(),
-        static_cast<unsigned long>(message.peer_ready.session_epoch));
+        "teleop-rover: paired (session %s, epoch %" PRIu64 ")\n",
+        message.peer_ready.session_id.c_str(), message.peer_ready.session_epoch);
       rover->pending_session_id = message.peer_ready.session_id;
       rover->pending_session_epoch = message.peer_ready.session_epoch;
       halt(rover, "awaiting_control_link");
@@ -470,8 +475,8 @@ void handle_message(Rover * rover, const std::string & text)
     case IncomingMessage::Kind::kIce:
       if (rover->webrtc != nullptr) {
         g_signal_emit_by_name(
-          rover->webrtc, "add-ice-candidate",
-          static_cast<guint>(message.ice.sdp_mline_index), message.ice.candidate.c_str());
+          rover->webrtc, "add-ice-candidate", static_cast<guint>(message.ice.sdp_mline_index),
+          message.ice.candidate.c_str());
       }
       break;
 
@@ -502,8 +507,7 @@ void handle_message(Rover * rover, const std::string & text)
   }
 }
 
-void on_socket_message(
-  SoupWebsocketConnection *, gint type, GBytes * payload, gpointer user_data)
+void on_socket_message(SoupWebsocketConnection *, gint type, GBytes * payload, gpointer user_data)
 {
   if (type != SOUP_WEBSOCKET_DATA_TEXT) {
     return;
@@ -525,8 +529,7 @@ void on_connected(GObject * source, GAsyncResult * result, gpointer user_data)
 {
   auto * rover = static_cast<Rover *>(user_data);
   GError * error = nullptr;
-  rover->socket = soup_session_websocket_connect_finish(
-    SOUP_SESSION(source), result, &error);
+  rover->socket = soup_session_websocket_connect_finish(SOUP_SESSION(source), result, &error);
   if (error != nullptr) {
     const std::string message = error->message;
     g_error_free(error);
@@ -553,8 +556,7 @@ int main(int argc, char ** argv)
   std::string config_path;
   try {
     config_path =
-      ament_index_cpp::get_package_share_directory("teleop_rover") +
-      "/config/media_profiles.yaml";
+      ament_index_cpp::get_package_share_directory("teleop_rover") + "/config/media_profiles.yaml";
   } catch (const std::exception &) {
     config_path = "config/media_profiles.yaml";
   }
@@ -586,8 +588,7 @@ int main(int argc, char ** argv)
   }
   rover.robot_id = robot_id;
   rover.guard = std::make_unique<ControlGuard>(
-    robot_id,
-    static_cast<std::uint32_t>(rover.config.control.watchdog_ms),
+    robot_id, static_cast<std::uint32_t>(rover.config.control.watchdog_ms),
     static_cast<std::uint32_t>(rover.config.control.max_future_clock_skew_ms));
 
   const auto choice = teleop_rover::select_encoder(rover.config.video.codec_preference);
@@ -600,23 +601,20 @@ int main(int argc, char ** argv)
   }
   rover.choice = *choice;
   std::printf(
-    "teleop-rover: %s via %s -> %s\n",
-    choice->codec.c_str(), choice->encoder.c_str(), choice->payloader.c_str());
+    "teleop-rover: %s via %s -> %s\n", choice->codec.c_str(), choice->encoder.c_str(),
+    choice->payloader.c_str());
 
   rover.loop = g_main_loop_new(nullptr, FALSE);
   rover.session = soup_session_new();
-  SoupMessage * request = soup_message_new(
-    "GET", rover.config.transport.signaling_url.c_str());
+  SoupMessage * request = soup_message_new("GET", rover.config.transport.signaling_url.c_str());
   if (request == nullptr) {
     std::fprintf(
-      stderr, "teleop-rover: bad signaling url %s\n",
-      rover.config.transport.signaling_url.c_str());
+      stderr, "teleop-rover: bad signaling url %s\n", rover.config.transport.signaling_url.c_str());
     return 2;
   }
   std::printf("teleop-rover: connecting to %s\n", rover.config.transport.signaling_url.c_str());
   soup_session_websocket_connect_async(
-    rover.session, request, nullptr, nullptr, G_PRIORITY_DEFAULT, nullptr,
-    on_connected, &rover);
+    rover.session, request, nullptr, nullptr, G_PRIORITY_DEFAULT, nullptr, on_connected, &rover);
   g_object_unref(request);
 
   g_main_loop_run(rover.loop);

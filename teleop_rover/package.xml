@@ -8,9 +8,11 @@
   <license>MIT</license>
   <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>ament_index_cpp</depend>
-  <depend>yaml-cpp</depend>
-  <depend>libsoup-3.0-dev</depend>
   <depend>libjson-glib-dev</depend>
+  <depend>libsoup-3.0-dev</depend>
+  <depend>yaml-cpp</depend>
   <test_depend>ament_cmake_gtest</test_depend>
-  <export><build_type>ament_cmake</build_type></export>
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

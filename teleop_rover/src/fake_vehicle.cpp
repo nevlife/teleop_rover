@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <string>
 
 namespace teleop_rover
 {
@@ -41,8 +42,7 @@ void FakeVehicle::stop(const std::string & reason)
 
 bool FakeVehicle::moving() const noexcept
 {
-  return std::abs(linear_mps_) > kMotionEpsilon ||
-         std::abs(angular_rps_) > kMotionEpsilon;
+  return std::abs(linear_mps_) > kMotionEpsilon || std::abs(angular_rps_) > kMotionEpsilon;
 }
 
 }  // namespace teleop_rover

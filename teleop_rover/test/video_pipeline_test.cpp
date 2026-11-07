@@ -5,11 +5,12 @@
 
 #include <set>
 #include <string>
+#include <vector>
 
-using teleop_rover::EncoderChoice;
-using teleop_rover::MediaConfig;
 using teleop_rover::build_send_pipeline;
 using teleop_rover::candidate_chains;
+using teleop_rover::EncoderChoice;
+using teleop_rover::MediaConfig;
 using teleop_rover::select_encoder;
 
 namespace
@@ -18,7 +19,7 @@ namespace
 /// GStreamer plugins the build machine happens to have.
 teleop_rover::FactoryPredicate having(std::set<std::string> factories)
 {
-  return [factories](const std::string & name) {return factories.count(name) > 0;};
+  return [factories](const std::string & name) { return factories.count(name) > 0; };
 }
 
 const std::vector<std::string> kDefaultPreference{"AV1", "VP9", "H264"};
@@ -27,8 +28,7 @@ const std::vector<std::string> kDefaultPreference{"AV1", "VP9", "H264"};
 TEST(SelectEncoder, PrefersTheFirstCodecWithACompleteChain)
 {
   const auto choice = select_encoder(
-    kDefaultPreference,
-    having({"svtav1enc", "rtpav1pay", "av1parse", "vp9enc", "rtpvp9pay"}));
+    kDefaultPreference, having({"svtav1enc", "rtpav1pay", "av1parse", "vp9enc", "rtpvp9pay"}));
   ASSERT_TRUE(choice.has_value());
   EXPECT_EQ(choice->codec, "AV1");
   EXPECT_EQ(choice->encoder, "svtav1enc");
@@ -38,43 +38,39 @@ TEST(SelectEncoder, SkipsACodecWhosePayloaderIsMissing)
 {
   // GStreamer 1.24 ships av1enc but no rtpav1pay, so AV1 cannot go over
   // WebRTC even though an encoder is present.
-  const auto choice = select_encoder(
-    kDefaultPreference,
-    having({"svtav1enc", "av1parse", "vp9enc", "rtpvp9pay"}));
+  const auto choice =
+    select_encoder(kDefaultPreference, having({"svtav1enc", "av1parse", "vp9enc", "rtpvp9pay"}));
   ASSERT_TRUE(choice.has_value());
   EXPECT_EQ(choice->codec, "VP9");
 }
 
 TEST(SelectEncoder, SkipsACodecWhoseParserIsMissing)
 {
-  const auto choice = select_encoder(
-    {"H264", "VP9"}, having({"x264enc", "rtph264pay", "vp9enc", "rtpvp9pay"}));
+  const auto choice =
+    select_encoder({"H264", "VP9"}, having({"x264enc", "rtph264pay", "vp9enc", "rtpvp9pay"}));
   ASSERT_TRUE(choice.has_value());
   EXPECT_EQ(choice->codec, "VP9") << "H264 needs h264parse, which is absent";
 }
 
 TEST(SelectEncoder, PrefersHardwareWithinACodec)
 {
-  const auto choice = select_encoder(
-    {"H264"}, having({"nvh264enc", "x264enc", "h264parse", "rtph264pay"}));
+  const auto choice =
+    select_encoder({"H264"}, having({"nvh264enc", "x264enc", "h264parse", "rtph264pay"}));
   ASSERT_TRUE(choice.has_value());
   EXPECT_EQ(choice->encoder, "nvh264enc");
 }
 
 TEST(SelectEncoder, FallsBackToSoftwareWithinACodec)
 {
-  const auto choice = select_encoder(
-    {"H264"}, having({"x264enc", "h264parse", "rtph264pay"}));
+  const auto choice = select_encoder({"H264"}, having({"x264enc", "h264parse", "rtph264pay"}));
   ASSERT_TRUE(choice.has_value());
   EXPECT_EQ(choice->encoder, "x264enc");
 }
 
 TEST(SelectEncoder, HonoursPreferenceOrder)
 {
-  const std::set<std::string> everything{
-    "nvh264enc", "h264parse", "rtph264pay",
-    "vp9enc", "rtpvp9pay",
-    "svtav1enc", "av1parse", "rtpav1pay"};
+  const std::set<std::string> everything{"nvh264enc", "h264parse", "rtph264pay", "vp9enc",
+                                         "rtpvp9pay", "svtav1enc", "av1parse",   "rtpav1pay"};
   EXPECT_EQ(select_encoder({"H264", "AV1"}, having(everything))->codec, "H264");
   EXPECT_EQ(select_encoder({"VP9", "H264"}, having(everything))->codec, "VP9");
 }
@@ -138,9 +134,9 @@ TEST(BuildSendPipeline, EveryDescriptionParses)
   MediaConfig config;
   for (const auto & codec : {"H264", "VP9", "AV1"}) {
     for (const auto & chain : candidate_chains(codec)) {
-      if (!teleop_rover::factory_exists(chain.encoder) ||
-        !teleop_rover::factory_exists(chain.payloader))
-      {
+      if (
+        !teleop_rover::factory_exists(chain.encoder) ||
+        !teleop_rover::factory_exists(chain.payloader)) {
         continue;
       }
       const auto description = build_send_pipeline(config, chain);

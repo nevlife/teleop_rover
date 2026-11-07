@@ -4,6 +4,8 @@
 
 #include <sstream>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 namespace teleop_rover
 {
@@ -18,37 +20,30 @@ std::int64_t to_kbps(std::int64_t bits_per_second)
 
 /// Encoder settings differ enough between factories that a shared property
 /// string is not possible: units alone vary between kbit/s and bit/s.
-std::string encoder_properties(
-  const std::string & encoder, const VideoConfig & video)
+std::string encoder_properties(const std::string & encoder, const VideoConfig & video)
 {
   std::ostringstream out;
   const auto gop = video.keyframe_interval_frames;
 
   if (encoder == "nvh264enc") {
-    out << " bitrate=" << to_kbps(video.target_bitrate_bps)
-        << " gop-size=" << gop
-        << " bframes=0"
+    out << " bitrate=" << to_kbps(video.target_bitrate_bps) << " gop-size=" << gop << " bframes=0"
         << " preset=low-latency-hq";
   } else if (encoder == "x264enc") {
-    out << " bitrate=" << to_kbps(video.target_bitrate_bps)
-        << " key-int-max=" << gop
+    out << " bitrate=" << to_kbps(video.target_bitrate_bps) << " key-int-max=" << gop
         << " bframes=0"
         << " speed-preset=veryfast"
         << " tune=zerolatency";
   } else if (encoder == "vp9enc") {
     // vpxenc takes bit/s, and deadline=1 is its realtime mode.
-    out << " target-bitrate=" << video.target_bitrate_bps
-        << " keyframe-max-dist=" << gop
+    out << " target-bitrate=" << video.target_bitrate_bps << " keyframe-max-dist=" << gop
         << " deadline=1"
         << " lag-in-frames=0"
         << " error-resilient=1";
   } else if (encoder == "svtav1enc") {
-    out << " target-bitrate=" << to_kbps(video.target_bitrate_bps)
-        << " intra-period-length=" << gop
+    out << " target-bitrate=" << to_kbps(video.target_bitrate_bps) << " intra-period-length=" << gop
         << " preset=10";
   } else if (encoder == "av1enc") {
-    out << " target-bitrate=" << to_kbps(video.target_bitrate_bps)
-        << " keyframe-max-dist=" << gop
+    out << " target-bitrate=" << to_kbps(video.target_bitrate_bps) << " keyframe-max-dist=" << gop
         << " usage-profile=realtime"
         << " lag-in-frames=0";
   } else {
@@ -125,8 +120,7 @@ std::optional<EncoderChoice> select_encoder(const std::vector<std::string> & pre
 }
 
 std::string build_send_pipeline(
-  const MediaConfig & config, const EncoderChoice & choice,
-  const std::string & sink_name)
+  const MediaConfig & config, const EncoderChoice & choice, const std::string & sink_name)
 {
   const auto & camera = config.camera;
   std::ostringstream out;
@@ -134,10 +128,8 @@ std::string build_send_pipeline(
   // MJPEG is requested explicitly: the USB bandwidth for raw YUY2 at 720p30
   // is not there on most webcams, and decodebin's negotiation is not worth
   // the latency when the format is known.
-  out << "v4l2src device=" << camera.device
-      << " io-mode=mmap"
-      << " ! image/jpeg,width=" << camera.width
-      << ",height=" << camera.height
+  out << "v4l2src device=" << camera.device << " io-mode=mmap"
+      << " ! image/jpeg,width=" << camera.width << ",height=" << camera.height
       << ",framerate=" << camera.fps << "/1"
       << " ! jpegdec"
       << " ! videoconvert"

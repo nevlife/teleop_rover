@@ -20,8 +20,7 @@ struct MotionCommand
   bool deadman{false};
 };
 
-enum class RejectReason
-{
+enum class RejectReason {
   kNotArmed,
   kWrongSession,
   kOldSequence,
@@ -47,21 +46,17 @@ class ControlGuard
 {
 public:
   explicit ControlGuard(
-    std::string robot_id,
-    std::uint32_t watchdog_ms = 250,
-    std::uint32_t max_future_skew_ms = 50);
+    std::string robot_id, std::uint32_t watchdog_ms = 250, std::uint32_t max_future_skew_ms = 50);
 
   bool arm(const std::string & session_id, std::uint64_t epoch, std::int64_t now_steady_ns);
   void disarm(const std::string & reason);
   CommandResult accept(
-    const MotionCommand & command,
-    std::int64_t now_unix_ns,
-    std::int64_t now_steady_ns);
+    const MotionCommand & command, std::int64_t now_unix_ns, std::int64_t now_steady_ns);
   bool poll_watchdog(std::int64_t now_steady_ns);
 
-  [[nodiscard]] bool armed() const noexcept {return armed_;}
-  [[nodiscard]] std::uint64_t epoch() const noexcept {return epoch_;}
-  [[nodiscard]] const std::string & stop_reason() const noexcept {return stop_reason_;}
+  [[nodiscard]] bool armed() const noexcept { return armed_; }
+  [[nodiscard]] std::uint64_t epoch() const noexcept { return epoch_; }
+  [[nodiscard]] const std::string & stop_reason() const noexcept { return stop_reason_; }
 
 private:
   CommandResult reject(RejectReason reason) const;

@@ -5,8 +5,8 @@
 #include <fstream>
 
 using teleop_rover::ConfigError;
-using teleop_rover::MediaConfig;
 using teleop_rover::load_media_config;
+using teleop_rover::MediaConfig;
 using teleop_rover::parse_media_config;
 
 namespace
@@ -130,22 +130,20 @@ TEST(MediaConfig, RejectsCommandValidityLongerThanWatchdog)
   // A command must go stale before the watchdog trips, or a command held in a
   // network queue could be accepted after the guard gave up on the link.
   EXPECT_THROW(
-    parse_media_config("control:\n  command_valid_for_ms: 400\n  watchdog_ms: 250\n"),
-    ConfigError);
+    parse_media_config("control:\n  command_valid_for_ms: 400\n  watchdog_ms: 250\n"), ConfigError);
 }
 
 TEST(MediaConfig, AcceptsValidityShorterThanWatchdog)
 {
-  const auto config = parse_media_config(
-    "control:\n  command_valid_for_ms: 100\n  watchdog_ms: 250\n");
+  const auto config =
+    parse_media_config("control:\n  command_valid_for_ms: 100\n  watchdog_ms: 250\n");
   EXPECT_EQ(config.control.command_valid_for_ms, 100);
 }
 
 TEST(MediaConfig, RejectsCommandRateSlowerThanExpiry)
 {
   // 4 Hz is one command every 250 ms, so each would expire before the next.
-  EXPECT_THROW(
-    parse_media_config("control:\n  command_rate_hz: 4\n"), ConfigError);
+  EXPECT_THROW(parse_media_config("control:\n  command_rate_hz: 4\n"), ConfigError);
 }
 
 TEST(MediaConfig, RejectsBFrames)

@@ -12,10 +12,9 @@ namespace
 {
 MotionCommand command(std::uint64_t sequence, std::int64_t sent_ns)
 {
-  return MotionCommand{
-    "rover-01", "session-a", 10, sequence, sent_ns, 200, 0.5, 0.2, true};
+  return MotionCommand{"rover-01", "session-a", 10, sequence, sent_ns, 200, 0.5, 0.2, true};
 }
-}
+}  // namespace
 
 TEST(ControlGuard, RequiresIncreasingEpochAndSequence)
 {

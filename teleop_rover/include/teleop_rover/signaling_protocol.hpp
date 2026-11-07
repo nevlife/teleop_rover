@@ -57,8 +57,7 @@ struct ServerError
 /// A message received from the signaling server.
 struct IncomingMessage
 {
-  enum class Kind
-  {
+  enum class Kind {
     kHelloAck,
     kPeerReady,
     kPeerLeft,
@@ -82,8 +81,7 @@ struct IncomingMessage
 class ProtocolError : public std::runtime_error
 {
 public:
-  explicit ProtocolError(const std::string & what)
-  : std::runtime_error(what) {}
+  explicit ProtocolError(const std::string & what) : std::runtime_error(what) {}
 };
 
 constexpr int kProtocolVersion = 2;

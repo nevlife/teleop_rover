@@ -2,14 +2,16 @@
 
 #include <gtest/gtest.h>
 
-using teleop_rover::IceCandidate;
-using teleop_rover::IncomingMessage;
-using teleop_rover::ProtocolError;
+#include <string>
+
 using teleop_rover::build_answer;
 using teleop_rover::build_hello;
 using teleop_rover::build_ice;
 using teleop_rover::build_offer;
+using teleop_rover::IceCandidate;
+using teleop_rover::IncomingMessage;
 using teleop_rover::parse_message;
+using teleop_rover::ProtocolError;
 
 // The frames below were captured from teleop_v2_server 8be6295 over the LAN
 // rather than written from the specification, so the tests fail if the
@@ -93,8 +95,7 @@ TEST(SignalingProtocol, PeerReadyRequiresSessionIdentity)
 
 TEST(SignalingProtocol, RoundTripsAnSdpOfferByteForByte)
 {
-  const std::string sdp =
-    "v=0\r\no=- 1 1 IN IP4 0.0.0.0\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\n";
+  const std::string sdp = "v=0\r\no=- 1 1 IN IP4 0.0.0.0\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\n";
   const auto message = parse_message(build_offer(sdp));
   ASSERT_EQ(message.kind, IncomingMessage::Kind::kOffer);
   EXPECT_EQ(message.description.sdp, sdp);
@@ -110,8 +111,7 @@ TEST(SignalingProtocol, RoundTripsAnSdpAnswer)
 
 TEST(SignalingProtocol, RoundTripsAnIceCandidate)
 {
-  const IceCandidate sent{
-    "candidate:1 1 UDP 2130706431 10.0.0.1 5000 typ host", "video0", 2};
+  const IceCandidate sent{"candidate:1 1 UDP 2130706431 10.0.0.1 5000 typ host", "video0", 2};
   const auto message = parse_message(build_ice(sent));
   ASSERT_EQ(message.kind, IncomingMessage::Kind::kIce);
   EXPECT_EQ(message.ice.candidate, sent.candidate);
@@ -121,8 +121,7 @@ TEST(SignalingProtocol, RoundTripsAnIceCandidate)
 
 TEST(SignalingProtocol, ParsesPeerLeft)
 {
-  EXPECT_EQ(
-    parse_message(R"({"type":"peer_left"})").kind, IncomingMessage::Kind::kPeerLeft);
+  EXPECT_EQ(parse_message(R"({"type":"peer_left"})").kind, IncomingMessage::Kind::kPeerLeft);
 }
 
 TEST(SignalingProtocol, ParsesServerError)

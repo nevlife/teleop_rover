@@ -31,11 +31,11 @@ public:
   /// watchdog trips, and when the operator leaves.
   void stop(const std::string & reason);
 
-  [[nodiscard]] const Pose & pose() const noexcept {return pose_;}
-  [[nodiscard]] double linear_mps() const noexcept {return linear_mps_;}
-  [[nodiscard]] double angular_rps() const noexcept {return angular_rps_;}
+  [[nodiscard]] const Pose & pose() const noexcept { return pose_; }
+  [[nodiscard]] double linear_mps() const noexcept { return linear_mps_; }
+  [[nodiscard]] double angular_rps() const noexcept { return angular_rps_; }
   [[nodiscard]] bool moving() const noexcept;
-  [[nodiscard]] const std::string & stop_reason() const noexcept {return stop_reason_;}
+  [[nodiscard]] const std::string & stop_reason() const noexcept { return stop_reason_; }
 
   static constexpr double kMaxTickSeconds = 0.1;
   /// Below this the vehicle counts as stopped, so floating-point dust does

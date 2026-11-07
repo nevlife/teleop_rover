@@ -55,8 +55,7 @@ struct MediaConfig
 class ConfigError : public std::runtime_error
 {
 public:
-  explicit ConfigError(const std::string & what)
-  : std::runtime_error(what) {}
+  explicit ConfigError(const std::string & what) : std::runtime_error(what) {}
 };
 
 /// Parse `media_profiles.yaml`. Missing keys keep the struct defaults; a key

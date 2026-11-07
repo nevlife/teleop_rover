@@ -4,7 +4,10 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdint>
 #include <fstream>
+#include <string>
+#include <vector>
 
 namespace teleop_rover
 {
@@ -13,7 +16,7 @@ namespace
 
 /// Read one scalar. A missing key keeps `out`; a present but unparseable or
 /// out-of-range key raises, so a typo cannot silently widen a limit.
-template<typename T>
+template <typename T>
 void read(const YAML::Node & parent, const char * key, T & out)
 {
   const auto node = parent[key];
@@ -27,7 +30,7 @@ void read(const YAML::Node & parent, const char * key, T & out)
   }
 }
 
-void require_positive(const char * key, long long value)
+void require_positive(const char * key, std::int64_t value)
 {
   if (value <= 0) {
     throw ConfigError(std::string("'") + key + "' must be positive");
@@ -36,9 +39,9 @@ void require_positive(const char * key, long long value)
 
 std::string upper(std::string text)
 {
-  std::transform(
-    text.begin(), text.end(), text.begin(),
-    [](unsigned char c) {return static_cast<char>(std::toupper(c));});
+  std::transform(text.begin(), text.end(), text.begin(), [](unsigned char c) {
+    return static_cast<char>(std::toupper(c));
+  });
   return text;
 }
 
@@ -74,9 +77,9 @@ MediaConfig parse_media_config(const std::string & yaml)
     read(transport, "signaling_url", config.transport.signaling_url);
     read(transport, "force_relay", config.transport.force_relay);
   }
-  if (config.transport.signaling_url.rfind("ws://", 0) != 0 &&
-    config.transport.signaling_url.rfind("wss://", 0) != 0)
-  {
+  if (
+    config.transport.signaling_url.rfind("ws://", 0) != 0 &&
+    config.transport.signaling_url.rfind("wss://", 0) != 0) {
     throw ConfigError("'transport.signaling_url' must be a ws:// or wss:// URL");
   }
 
@@ -96,15 +99,13 @@ MediaConfig parse_media_config(const std::string & yaml)
   // a command queued by the network could still be accepted after the guard
   // had already decided the link was dead.
   if (config.control.command_valid_for_ms > config.control.watchdog_ms) {
-    throw ConfigError(
-            "'control.command_valid_for_ms' must not exceed 'control.watchdog_ms'");
+    throw ConfigError("'control.command_valid_for_ms' must not exceed 'control.watchdog_ms'");
   }
   // Commands must arrive faster than they expire, or every one of them is
   // stale before its successor lands and the guard never stays armed.
   const int command_interval_ms = 1000 / config.control.command_rate_hz;
   if (command_interval_ms >= config.control.command_valid_for_ms) {
-    throw ConfigError(
-            "'control.command_rate_hz' is too low for 'control.command_valid_for_ms'");
+    throw ConfigError("'control.command_rate_hz' is too low for 'control.command_valid_for_ms'");
   }
 
   if (const auto video = root["video"]) {
@@ -151,8 +152,7 @@ MediaConfig load_media_config(const std::string & path)
   if (!file) {
     throw ConfigError("cannot open " + path);
   }
-  const std::string text{
-    std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
+  const std::string text{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
   return parse_media_config(text);
 }
 
